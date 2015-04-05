@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+  <title>Spectra</title>
+  <script language="JavaScript" type="text/javascript" src="jquery-2.0.3.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="dygraph-combined.js"></script>
+  <script language="JavaScript" type="text/javascript" src="bitvector.js"></script>
+  <script language="JavaScript" type="text/javascript" src="fimidata_oo.js"></script>
+  <script language="JavaScript" type="text/javascript" src="fakedata.js"></script>
+  <script language="JavaScript" type="text/javascript" src="pava.js"></script>
+  <script language="JavaScript" type="text/javascript" src="spectra.js"></script>
+  <script language="JavaScript" type="text/javascript" src="spectrademo.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="spectrademo.css">
+</head>
+
+<body>
+
+<h1>Spectra: Fast Estimation of the Pattern Frequency Spectrum</h1>
+<p>
+This is a 100% JavaScript implementation of
+the Spectra algorithm described in
+<i>"Fast estimation of the pattern frequency spectrum"</i> (van Leeuwen & Ukkonen, 2014)
+<a href="http://patternsthatmatter.org/pubs/2014/fast_estimation_of_the_pattern_frequency_spectrum-vanleeuwen,ukkonen.pdf">[pdf]</a>.
+</p>
+<p>
+The example datasets are automatically loaded from the server. Please be patient, loading Connect and Pumsbstar may take a few seconds. On these datasets running the estimation using default parameters may take up to one minute. Lower the number of samples if you don't want to wait. If your browser says that the script has stopped responding, just tell it to keep going. The algorithm will finish eventually.
+</p>
+<p>
+For the example datasets we provide the exact frequency spectrum (computed offline). This is shown in <b>black</b>. The estimated frequency spectrum is shown in <font color="#0000ff"><b>blue</b></font>, while the expected frequency spectrum in data having the same column marginals is shown in <font color="#00aa00"><b>green</b></font>.
+</p>
+<table>
+<tr>
+  <td valign="top">
+    <table>
+      <tr><td>
+        Load example data:
+      </td></tr>
+      <tr><td>
+        <select id="dataselector" name="datasets">
+          <option value="">Select dataset</option>
+          <option value="adult">adult (48842 x 97)</option>
+          <option value="chess">chess (3196 x 75)</option>
+          <option value="connect">connect (67557 x 129)</option>
+          <option value="letrecog">letrecog (20000 x 102)</option>
+          <option value="mammals">mammals (2183 x 121)</option>
+          <option value="mushroom">mushroom (8124 x 119)</option>
+          <option value="pumsbstar">pumsbstar (49046 x 2088)</option>
+          <option value="waveform">waveform (5000 x 101)</option>
+        </select>
+      </td></tr>
+      <tr><td>
+        Or load data (in FIMI format) from local filesystem:
+      </td></tr>
+      <tr><td>
+        <input type="file" id="fileinput">
+      </td></tr>
+      </table>
+      <table>
+        <tr><td>num rows:</td><td id="numrows"></td></tr>
+        <tr><td>num cols:</td><td id="numcols"></td></tr>
+        <tr><td>min sigma:</td><td><input id="minsigma" type="text"></td></tr>
+        <tr><td>max sigma:</td><td><input id="maxsigma" type="text"></td></tr>
+        <tr><td>num samples:</td><td><input id="numsamples" type="text"></td></tr>
+        <tr><td colspan="2" align="center">
+        <button id="runbutton">&nbsp; Run Spectra! &nbsp;</button>
+        </td></tr>
+        <tr><td id="statustext" colspan="2"></td></tr>
+      </table>
+    </td>
+    <td><div id="graphdiv", style="width:800px; height:500px;"></div></td>
+  </tr>
+</table>
+
+</body> </html>
