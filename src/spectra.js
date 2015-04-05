@@ -94,10 +94,10 @@ function path_estimate_closed( degrees ) {
     return x;
 }
 
-function fast_est( data, sigmas ) {
+function fast_est( data, sigmas, path_est_fnc ) {
     var estimates = new Array();
     for ( var i = 0; i < sigmas.length; i++ ) {
-	estimates.push( path_estimate( sample_path( data, sigmas[i] ) ) )
+	estimates.push( path_est_fnc( sample_path( data, sigmas[i] ) ) )
     }
     return estimates;
 }

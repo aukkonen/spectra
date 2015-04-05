@@ -16,11 +16,19 @@ console.log( "Got dataset with " + data.num_rows + " rows, and " +
 var sigmaMin = parseInt( process.argv[3] );
 var sigmaMax = parseInt( process.argv[4] );
 var rounds   = parseInt( process.argv[5] );
+var mode     = process.argv[6];
 
 var sigmas = get_sigmas( sigmaMin, sigmaMax, rounds )
 
 console.log( "Running FastEst with " + rounds + " samples..." );
-var ests = fast_est( data, sigmas );
+
+var ests = null;
+if ( mode == 'all' ) {
+    ests = fast_est( data, sigmas, path_estimate );
+}
+else if ( mode == 'closed' ) {
+    ests = fast_est( data, sigmas, path_estimate_closed )
+}
 
 if ( sigmaMax > sigmaMin ) {
     var curve = fitcurve( sigmas, ests );
