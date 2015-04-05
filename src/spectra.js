@@ -48,12 +48,12 @@ function sample_path( data, sigma ) {
     for ( var i = 0; i < data.items.length; i++ ) {
         items.push( { item:data.items[i], itemfreq:currentFreq } )
     }
-    var d = new Array();
+    var degrees = new Array();
     while ( items.length > 1 ) {
 	var res = get_frequent_items( items, data, sigma, currentFreq );
         items = res.items;
 	if ( items.length > 0 ) {
-	    d.push( items.length )
+	    degrees.push( { deg: items.length, closed: res.closed } )
 	    var idx = Math.floor( Math.random()*items.length )
 	    var e = items[ idx ]
 	    // removes item at position idx
@@ -67,7 +67,7 @@ function sample_path( data, sigma ) {
 	}
     }
     data.clear_projection();
-    return d;
+    return degrees;
 }
 
 function path_estimate( degrees ) {
@@ -75,9 +75,21 @@ function path_estimate( degrees ) {
     var d = 1.0;
     var correction = 1.0;
     for ( var i = 0; i < degrees.length; i++ ) {
-	d *= degrees[i];
+	d *= degrees[i].deg;
 	correction = correction*(i+1);
 	x += d/correction;
+    }
+    return x;
+}
+
+function path_estimate_closed( degrees ) {
+    var x = 1.0;
+    var d = 1.0;
+    var correction = 1.0;
+    for ( var i = 0; i < degrees.length; i++ ) {
+	d *= degrees[i].deg;
+	correction = correction*(i+1);
+	x += (d/correction * degrees[i].closed);
     }
     return x;
 }
