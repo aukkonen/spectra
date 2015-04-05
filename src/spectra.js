@@ -20,23 +20,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-function update_path_items( items, data, sigma ) {
+// Returns:
+// - a list of items that remain frequent when added to the current itemset
+//   together with their frequencies, and
+// - a boolean that indicates if the current itemset is closed.
+// An itemset is closed if we cannot extend it with any item without
+// the support dropping below sigma.
+function get_frequent_items( items, data, sigma, currentFreq ) {
     var new_items = new Array();
+    var closed    = true;
     for ( var i = 0; i < items.length; i++ ) {
-	var e = items[i];
-	if ( data.item_freq(e) >= sigma ) {
-	    new_items.push( e );
+	var e = items[i].item;
+        var efreq = data.item_freq(e);
+	if ( efreq >= sigma ) {
+	    new_items.push( { item:e, itemfreq:efreq } );
+            closed = closed & ( efreq < currentFreq )
 	}
     }
-    return new_items;
+    return { items: new_items, closed: closed };
 }
 
 function sample_path( data, sigma ) {
+    var currentFreq = data.num_rows;
     // make a copy of items because we will modify it
-    var items = data.items.slice(0);
+    // var items = data.items.slice(0);
+    var items = new Array();
+    for ( var i = 0; i < data.items.length; i++ ) {
+        items.push( { item:data.items[i], itemfreq:currentFreq } )
+    }
     var d = new Array();
     while ( items.length > 1 ) {
-	items = update_path_items( items, data, sigma );
+	var res = get_frequent_items( items, data, sigma, currentFreq );
+        items = res.items;
 	if ( items.length > 0 ) {
 	    d.push( items.length )
 	    var idx = Math.floor( Math.random()*items.length )
@@ -44,7 +59,9 @@ function sample_path( data, sigma ) {
 	    // removes item at position idx
 	    items.splice( idx, 1 );
 	    // update projection on data
-	    data.project_on_item( e );
+	    data.project_on_item( e.item );
+            // update current frequency to that of the selected item
+            currentFreq = e.itemfreq;
 	} else {
 	    break;
 	}
