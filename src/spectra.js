@@ -34,30 +34,33 @@ function get_frequent_items( items, data, sigma, currentFreq ) {
         var efreq = data.item_freq(e);
 	if ( efreq >= sigma ) {
 	    new_items.push( { item:e, itemfreq:efreq } );
-            closed = closed & ( efreq < currentFreq )
+            closed = closed & ( efreq < currentFreq );
 	}
     }
     return { items: new_items, closed: closed };
 }
 
-function sample_path( data, sigma ) {
+function sample_path( data, sigma, maxdepth ) {
     var currentFreq = data.num_rows;
     // make a copy of items because we will modify it
     // var items = data.items.slice(0);
-    var items = new Array();
+    var candidates = new Array();
     for ( var i = 0; i < data.items.length; i++ ) {
-        items.push( { item:data.items[i], itemfreq:currentFreq } )
+        candidates.push( { item:data.items[i], itemfreq:currentFreq } );
     }
     var degrees = new Array();
-    while ( items.length > 1 ) {
-	var res = get_frequent_items( items, data, sigma, currentFreq );
-        items = res.items;
-	if ( items.length > 0 ) {
-	    degrees.push( { deg: items.length, closed: res.closed } )
-	    var idx = Math.floor( Math.random()*items.length )
-	    var e = items[ idx ]
+    // by checking for <= maxdepth we in fact go one step deeper.
+    // this is needed for closed set estimation, where we must know if
+    // the node at the last level is closed.
+    while ( degrees.length <= maxdepth ) {
+	var res = get_frequent_items( candidates, data, sigma, currentFreq );
+        candidates = res.items;
+        degrees.push( { deg: candidates.length, closed: res.closed } );
+	if ( candidates.length > 0 ) {
+	    var idx = Math.floor( Math.random()*candidates.length );
+	    var e   = candidates[ idx ];
 	    // removes item at position idx
-	    items.splice( idx, 1 );
+	    candidates.splice( idx, 1 );
 	    // update projection on data
 	    data.project_on_item( e.item );
             // update current frequency to that of the selected item
@@ -70,11 +73,15 @@ function sample_path( data, sigma ) {
     return degrees;
 }
 
-function path_estimate( degrees ) {
+function path_estimate( degrees, maxdepth ) {
     var x = 1.0;
     var d = 1.0;
     var correction = 1.0;
-    for ( var i = 0; i < degrees.length; i++ ) {
+    var limit = maxdepth;
+    if ( degrees.length < limit ) {
+        limit = degrees.length;
+    }
+    for ( var i = 0; i < limit; i++ ) {
 	d *= degrees[i].deg;
 	correction = correction*(i+1);
 	x += d/correction;
@@ -82,22 +89,30 @@ function path_estimate( degrees ) {
     return x;
 }
 
-function path_estimate_closed( degrees ) {
+function path_estimate_closed( degrees, maxdepth ) {
     var x = 1.0;
     var d = 1.0;
     var correction = 1.0;
-    for ( var i = 0; i < degrees.length; i++ ) {
+    var limit = maxdepth;
+    if ( degrees.length < limit ) {
+        limit = degrees.length;
+        // Push a final item that represents the last entry
+        // that is always closed but has zero degree due to
+        // the itemset being on the border.
+        degrees.push( { deg: 0, closed: true } )
+    }    
+    for ( var i = 0; i < limit; i++ ) {
 	d *= degrees[i].deg;
 	correction = correction*(i+1);
-	x += (d/correction * degrees[i].closed);
+	x += (d/correction * degrees[i+1].closed);
     }
     return x;
 }
 
-function fast_est( data, sigmas, path_est_fnc ) {
+function fast_est( data, sigmas, path_est_fnc, maxdepth ) {
     var estimates = new Array();
     for ( var i = 0; i < sigmas.length; i++ ) {
-	estimates.push( path_est_fnc( sample_path( data, sigmas[i] ) ) )
+	estimates.push( path_est_fnc( sample_path( data, sigmas[i], maxdepth ), maxdepth ) );
     }
     return estimates;
 }
@@ -105,7 +120,7 @@ function fast_est( data, sigmas, path_est_fnc ) {
 function convert_log10( points ) {
     var converted = new Array();
     for ( var i = 0; i < points.length; i++ ) {
-	converted.push( new Array( points[i][0], Math.log( points[i][1] )/Math.LN10) )
+	converted.push( new Array( points[i][0], Math.log( points[i][1] )/Math.LN10) );
     }
     return converted;
 }
