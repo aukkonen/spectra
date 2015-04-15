@@ -74,7 +74,7 @@ function sample_path( data, sigma, maxdepth ) {
 }
 
 function path_estimate( degrees, maxdepth ) {
-    var x = 1.0;
+    var x = 0.0;
     var d = 1.0;
     var correction = 1.0;
     var limit = maxdepth;
@@ -90,11 +90,11 @@ function path_estimate( degrees, maxdepth ) {
 }
 
 function path_estimate_closed( degrees, maxdepth ) {
-    var x = 1.0;
+    var x = 0.0;
     var d = 1.0;
     var correction = 1.0;
     var limit = maxdepth;
-    if ( degrees.length < limit ) {
+    if ( degrees.length <= limit ) {
         limit = degrees.length;
         // Push a final item that represents the last entry
         // that is always closed but has zero degree due to
