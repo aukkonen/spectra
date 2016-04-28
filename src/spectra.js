@@ -28,13 +28,13 @@
 // the support dropping below the current frequency.
 function get_frequent_items( items, data, sigma, currentFreq ) {
     var new_items = new Array();
-    var closed    = true;
+    var closed    = 1;
     for ( var i = 0; i < items.length; i++ ) {
 	var e = items[i].item;
         var efreq = data.item_freq(e);
 	if ( efreq >= sigma ) {
 	    new_items.push( { item:e, itemfreq:efreq } );
-            closed = closed & ( efreq < currentFreq );
+            closed = closed * ( efreq < currentFreq );
 	}
     }
     return { items: new_items, closed: closed };
@@ -70,7 +70,6 @@ function sample_path( data, sigma, maxdepth ) {
 	}
     }
     data.clear_projection();
-    console.log( path.length )
     return path;
 }
 
@@ -100,13 +99,15 @@ function path_estimate_closed( path, maxdepth ) {
         // Push a final item that represents the last entry
         // that is always closed but has zero degree due to
         // the itemset being on the border.
-        path.push( { deg: 0, closed: true } )
+        path.push( { deg: 0, closed: 1 } )
     }    
     for ( var i = 0; i < limit; i++ ) {
 	d *= path[i].deg;
 	correction = correction*(i+1);
 	x += (d/correction * path[i+1].closed);
+        console.log( path[i].deg + " " + path[i].closed )
     }
+    console.log( "-1 -1" )
     return x;
 }
 
