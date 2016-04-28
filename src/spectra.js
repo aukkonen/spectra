@@ -25,7 +25,7 @@
 //   together with their frequencies, and
 // - a boolean that indicates if the current itemset is closed.
 // An itemset is closed if we cannot extend it with any item without
-// the support dropping below sigma.
+// the support dropping below the current frequency.
 function get_frequent_items( items, data, sigma, currentFreq ) {
     var new_items = new Array();
     var closed    = true;
@@ -48,14 +48,14 @@ function sample_path( data, sigma, maxdepth ) {
     for ( var i = 0; i < data.items.length; i++ ) {
         candidates.push( { item:data.items[i], itemfreq:currentFreq } );
     }
-    var degrees = new Array();
+    var path = new Array();
     // by checking for <= maxdepth we in fact go one step deeper.
     // this is needed for closed set estimation, where we must know if
     // the node at the last level is closed.
-    while ( degrees.length <= maxdepth ) {
+    while ( path.length <= maxdepth ) {
 	var res = get_frequent_items( candidates, data, sigma, currentFreq );
         candidates = res.items;
-        degrees.push( { deg: candidates.length, closed: res.closed } );
+        path.push( { deg: candidates.length, closed: res.closed } );
 	if ( candidates.length > 0 ) {
 	    var idx = Math.floor( Math.random()*candidates.length );
 	    var e   = candidates[ idx ];
@@ -70,41 +70,42 @@ function sample_path( data, sigma, maxdepth ) {
 	}
     }
     data.clear_projection();
-    return degrees;
+    console.log( path.length )
+    return path;
 }
 
-function path_estimate( degrees, maxdepth ) {
+function path_estimate( path, maxdepth ) {
     var x = 0.0;
     var d = 1.0;
     var correction = 1.0;
     var limit = maxdepth;
-    if ( degrees.length < limit ) {
-        limit = degrees.length;
+    if ( path.length < limit ) {
+        limit = path.length;
     }
     for ( var i = 0; i < limit; i++ ) {
-	d *= degrees[i].deg;
+	d *= path[i].deg;
 	correction = correction*(i+1);
 	x += d/correction;
     }
     return x;
 }
 
-function path_estimate_closed( degrees, maxdepth ) {
+function path_estimate_closed( path, maxdepth ) {
     var x = 0.0;
     var d = 1.0;
     var correction = 1.0;
     var limit = maxdepth;
-    if ( degrees.length <= limit ) {
-        limit = degrees.length;
+    if ( path.length <= limit ) {
+        limit = path.length;
         // Push a final item that represents the last entry
         // that is always closed but has zero degree due to
         // the itemset being on the border.
-        degrees.push( { deg: 0, closed: true } )
+        path.push( { deg: 0, closed: true } )
     }    
     for ( var i = 0; i < limit; i++ ) {
-	d *= degrees[i].deg;
+	d *= path[i].deg;
 	correction = correction*(i+1);
-	x += (d/correction * degrees[i+1].closed);
+	x += (d/correction * path[i+1].closed);
     }
     return x;
 }
