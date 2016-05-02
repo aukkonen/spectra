@@ -28,10 +28,12 @@ console.log( "Running FastEst with " + rounds + " samples..." );
 
 var ests = null;
 if ( mode == 'all' ) {
-    ests = fast_est( data, sigmas, path_estimate, maxdepth );
+    // ests = fast_est( data, sigmas, path_estimate, sample_candidate_uniform, maxdepth );
+    ests = fast_est( data, sigmas, path_estimate, sample_candidate_ifreq, maxdepth );
 }
 else if ( mode == 'closed' ) {
-    ests = fast_est( data, sigmas, path_estimate_closed, maxdepth )
+    ests = fast_est( data, sigmas, path_estimate_closed, sample_candidate_uniform, maxdepth )
+    // ests = fast_est( data, sigmas, path_estimate_closed, sample_candidate_ifreq, maxdepth )
 }
 
 if ( sigmaMax > sigmaMin ) {

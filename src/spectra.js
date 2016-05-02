@@ -40,7 +40,7 @@ function get_frequent_items( items, data, sigma, currentFreq ) {
     return { items: new_items, closed: closed };
 }
 
-function sample_path( data, sigma, maxdepth ) {
+function sample_path( data, sigma, maxdepth, sample_candidate_fnc ) {
     var currentFreq = data.num_rows;
     // make a copy of items because we will modify it
     // var items = data.items.slice(0);
@@ -55,22 +55,49 @@ function sample_path( data, sigma, maxdepth ) {
     while ( path.length <= maxdepth ) {
 	var res = get_frequent_items( candidates, data, sigma, currentFreq );
         candidates = res.items;
-        path.push( { deg: candidates.length, closed: res.closed } );
 	if ( candidates.length > 0 ) {
-	    var idx = Math.floor( Math.random()*candidates.length );
-	    var e   = candidates[ idx ];
+            // idx has two elements:
+            // i (the position of the item in candidates), and
+            // invprob (inverse probability with which item was chosen)
+            var idx = sample_candidate_fnc( candidates )
+            var e   = candidates[ idx.i ];
 	    // removes item at position idx
-	    candidates.splice( idx, 1 );
+	    candidates.splice( idx.i, 1 );
 	    // update projection on data
 	    data.project_on_item( e.item );
             // update current frequency to that of the selected item
             currentFreq = e.itemfreq;
+            // push the probability with which the current item was chosen on the path
+            path.push( { deg: idx.invprob, closed: res.closed } );
 	} else {
+            path.push( { deg: 0, closed: res.closed } )
 	    break;
 	}
     }
     data.clear_projection();
     return path;
+}
+
+function sample_candidate_uniform( candidates ) {
+    return { i: Math.floor( Math.random()*candidates.length ),
+             invprob: candidates.length }
+}
+
+function sample_candidate_ifreq( candidates ) {
+    // store the total item freq "mass" in x
+    var x = 0;
+    for ( var i = 0; i < candidates.length; i++ ) {
+        x += candidates[i].itemfreq
+    }
+    var y = Math.random()*x;
+    var xx = 0;
+    for ( var i = 0; i < candidates.length; i++ ) {
+        xx += candidates[i].itemfreq
+        if ( y < xx ) {
+            return { i: i, invprob: x/candidates[i].itemfreq };
+        }
+    }
+    return { i: candidates.length-1, invprob: x/candidates[candidates.length-1].itemfreq };
 }
 
 function path_estimate( path, maxdepth ) {
@@ -105,16 +132,17 @@ function path_estimate_closed( path, maxdepth ) {
 	d *= path[i].deg;
 	correction = correction*(i+1);
 	x += (d/correction * path[i+1].closed);
-        console.log( path[i].deg + " " + path[i].closed )
+        // console.log( path[i].deg + " " + path[i].closed )
     }
-    console.log( "-1 -1" )
+    // console.log( "-1 -1" )
     return x;
 }
 
-function fast_est( data, sigmas, path_est_fnc, maxdepth ) {
+function fast_est( data, sigmas, path_est_fnc, sample_cand_fnc, maxdepth ) {
     var estimates = new Array();
     for ( var i = 0; i < sigmas.length; i++ ) {
-	estimates.push( path_est_fnc( sample_path( data, sigmas[i], maxdepth ), maxdepth ) );
+	estimates.push( path_est_fnc( sample_path( data, sigmas[i], maxdepth, sample_cand_fnc ),
+                                      maxdepth ) );
     }
     return estimates;
 }
