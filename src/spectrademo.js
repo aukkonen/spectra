@@ -21,9 +21,8 @@
 // THE SOFTWARE.
 
 function ui_status_disabled( v ) {
-    $("#runbutton").prop( "disabled", v )
-    // $("#dataselector").prop( "disabled", v )
-    // $("#fileinput").prop( "disabled", v )
+    $("dropdownMenu1").prop( "disabled", v );
+    $("#runbutton").prop( "disabled", v );
 }
 
 function load_data_from_string( datastr ) {
@@ -158,7 +157,6 @@ function run_spectra( main_container ) {
     $("#statustext").html( "Done! (in " +
 			   ((new Date().getTime() - beginTime)/1000).toFixed(1) +
 			   " sec.)" );
-    // $("#loadbutton").attr( "disabled", false );
     $("#runbutton").attr( "disabled", false );
 }
 
@@ -167,40 +165,15 @@ function main() {
     // set listeners
     var main_container = {data: undefined, exact_curve: undefined};
 
-    // $("#fileinput").bind( "change", function(evt) {
-    //     var files = evt.target.files;
-    //     var reader = new FileReader();
-        
-    //     reader.onload = function() {
-    //         main_container.data = load_data_from_string( reader.result );
-    //         $("#dataselector")[0].selectedIndex = 0;
-    //         main_container.exact_curve = undefined;
-    //         new Dygraph( $("#graphdiv")[0], undefined );
-    //     }
-    //     reader.readAsText( files[0] );
-    //     $("#statustext").html("Loading data from disk...");
-    // } );
-    // $("#fileinput")[0].value = "";
-
-    // $("#dataselector").bind( "change", function( evt ) {
     $(".dataitem").click( function( evt ) {
 	var dataname = evt.target.innerHTML.split(" ")[0]
-	console.log( "dataname is: " + dataname );
-        // var dataselector = $("#dataselector")[0];
-        // if ( dataselector.selectedIndex == 0 ) {
-        //     return;
-        // }
+
         $("#statustext").html("Loading data from server...");
         ui_status_disabled( true );
 
-        // // clear file name from fileinput
-        // $("#fileinput")[0].value = "";
-
         // load actual data
         $.get( "fimidata/" + dataname + ".dat", function( data ) {
-	    console.log( "loaded data" );
             main_container.data = load_data_from_string( data );
-	    console.log( "parsed data" );
             ui_status_disabled( false );
         } );
 
@@ -219,7 +192,6 @@ function main() {
     		             } );
         } );
     } );
-    // $("#dataselector")[0].selectedIndex = 0;
 
     $("#runbutton").click( function() {
         ui_status_disabled( true );
@@ -232,6 +204,10 @@ function main() {
 	}, 50 );
     } );
     $("#runbutton").attr( "disabled", true );
+
+    $("#minsigma").val( "" );
+    $("#maxsigma").val( "" );
+    $("#numsamples").val( "" );
 
     $('body').ajaxStart(function() {
         $(this).css({'cursor':'wait'});
