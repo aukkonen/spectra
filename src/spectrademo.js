@@ -22,8 +22,8 @@
 
 function ui_status_disabled( v ) {
     $("#runbutton").prop( "disabled", v )
-    $("#dataselector").prop( "disabled", v )
-    $("#fileinput").prop( "disabled", v )
+    // $("#dataselector").prop( "disabled", v )
+    // $("#fileinput").prop( "disabled", v )
 }
 
 function load_data_from_string( datastr ) {
@@ -122,14 +122,18 @@ function run_spectra( main_container ) {
     var beginTime   = new Date().getTime();
 
     // fit curve from real data
-    var realEsts  = fast_est( data, sigmas );
+    var realEsts  = fast_est( data, sigmas,
+			      path_estimate, sample_candidate_uniform,
+			      1000 );
     var realCurve = fitcurve( sigmas, realEsts );
 
     // fit expected curve with random data:
     var fakedata = new FakeData();
     fakedata.params_from_data( data );
 
-    var fakeEsts  = fast_est( fakedata, sigmas );
+    var fakeEsts  = fast_est( fakedata, sigmas,
+			      path_estimate, sample_candidate_uniform,
+			      1000 );
     var fakeCurve = fitcurve( sigmas, fakeEsts );
 
     // merge curves for plotting
@@ -154,7 +158,7 @@ function run_spectra( main_container ) {
     $("#statustext").html( "Done! (in " +
 			   ((new Date().getTime() - beginTime)/1000).toFixed(1) +
 			   " sec.)" );
-    $("#loadbutton").attr( "disabled", false );
+    // $("#loadbutton").attr( "disabled", false );
     $("#runbutton").attr( "disabled", false );
 }
 
@@ -163,40 +167,45 @@ function main() {
     // set listeners
     var main_container = {data: undefined, exact_curve: undefined};
 
-    $("#fileinput").bind( "change", function(evt) {
-        var files = evt.target.files;
-        var reader = new FileReader();
+    // $("#fileinput").bind( "change", function(evt) {
+    //     var files = evt.target.files;
+    //     var reader = new FileReader();
         
-        reader.onload = function() {
-            main_container.data = load_data_from_string( reader.result );
-            $("#dataselector")[0].selectedIndex = 0;
-            main_container.exact_curve = undefined;
-            new Dygraph( $("#graphdiv")[0], undefined );
-        }
-        reader.readAsText( files[0] );
-        $("#statustext").html("Loading data from disk...");
-    } );
-    $("#fileinput")[0].value = "";
+    //     reader.onload = function() {
+    //         main_container.data = load_data_from_string( reader.result );
+    //         $("#dataselector")[0].selectedIndex = 0;
+    //         main_container.exact_curve = undefined;
+    //         new Dygraph( $("#graphdiv")[0], undefined );
+    //     }
+    //     reader.readAsText( files[0] );
+    //     $("#statustext").html("Loading data from disk...");
+    // } );
+    // $("#fileinput")[0].value = "";
 
-    $("#dataselector").bind( "change", function( evt ) {
-        var dataselector = $("#dataselector")[0];
-        if ( dataselector.selectedIndex == 0 ) {
-            return;
-        }
+    // $("#dataselector").bind( "change", function( evt ) {
+    $(".dataitem").click( function( evt ) {
+	var dataname = evt.target.innerHTML.split(" ")[0]
+	console.log( "dataname is: " + dataname );
+        // var dataselector = $("#dataselector")[0];
+        // if ( dataselector.selectedIndex == 0 ) {
+        //     return;
+        // }
         $("#statustext").html("Loading data from server...");
         ui_status_disabled( true );
 
-        // clear file name from fileinput
-        $("#fileinput")[0].value = "";
+        // // clear file name from fileinput
+        // $("#fileinput")[0].value = "";
 
         // load actual data
-        $.get( "fimidata/" + dataselector.value + ".dat", function( data ) {
+        $.get( "fimidata/" + dataname + ".dat", function( data ) {
+	    console.log( "loaded data" );
             main_container.data = load_data_from_string( data );
+	    console.log( "parsed data" );
             ui_status_disabled( false );
         } );
 
         // load the exact frequency spectrum for this data
-        $.get( "fimidata/" + dataselector.value + ".exact.txt", function( data ) {
+        $.get( "fimidata/" + dataname + ".exact.txt", function( data ) {
             main_container.exact_curve = load_exact_curve_from_string( data );
             g = new Dygraph( $("#graphdiv")[0],
     		             main_container.exact_curve,
@@ -210,7 +219,7 @@ function main() {
     		             } );
         } );
     } );
-    $("#dataselector")[0].selectedIndex = 0;
+    // $("#dataselector")[0].selectedIndex = 0;
 
     $("#runbutton").click( function() {
         ui_status_disabled( true );
@@ -229,6 +238,16 @@ function main() {
     }).ajaxStop(function() {
         $(this).css({'cursor':'default'});
     });
+}
+
+function testmain() {
+    console.log( 'main called' );
+    $(".dataitem").click( function( evt ) {
+	console.log( evt.target.innerHTML.split(" ")[0] );
+	console.log( this );
+	$("#numrows").html( evt.target.innerHTML );
+	$("#numcols").html( evt.target.innerHTML );
+    } );
 }
 
 $(document).ready( main );
